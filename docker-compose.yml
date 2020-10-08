@@ -1,40 +1,61 @@
-web:
-    image: php:7.4-apache
-    ports:
-        - 80:80
-    volumes:
-        - ./src:/var/www/html
-    links:
-        - db
-    environment:
-        - MODX_VERSION={MODX_VERSION}
-        - MODX_SHA1={MODX_SHA1}
-        - MODX_ADMIN_USER={MODX_ADMIN_USER}
-        - MODX_ADMIN_PASSWORD={MODX_ADMIN_PASSWORD}
-        - MODX_ADMIN_EMAIL={MODX_ADMIN_EMAIL}
-db:
-    image: mysql:5.7
-    container_name: db
-    ports:
-        - 3306:3306
-    command: mysqld --sql-mode=NO_ENGINE_SUBSTITUTION
-    environment:
-        # with mysql
-        - MYSQL_ROOT_PASSWORD=root
-        - MYSQL_DATABASE=modx
-        - MYSQL_USER=modx
-        - MYSQL_PASSWORD=modx
-    volumes:
-      - './data/mysql:/var/lib/mysql'
-phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    links:
-        - db
-    environment:
-        - PMA_ARBITRARY=1
-    restart: always
-    ports:
-        - 8080:80
-    volumes:
-        - /sessions
+version: '3'
+
+services:
+    web:
+        build: 
+            context: ./build/web
+            args: 
+                - MODX_VERSION=${MODX_VERSION}
+                - MODX_SHA1=${MODX_SHA1}
+        ports:
+            - 80:80
+        volumes:
+            - ./src:/var/www/html
+        links:
+            - db
+        networks:
+            - modx
+        environment:
+            - MODX_DB_PASSWORD=${MYSQL_PASSWORD}
+            - MODX_DB_USER=${MYSQL_USER}
+            - MODX_DB_NAME=${MYSQL_DATABASE}
+            - MODX_DB_HOST=db:3306
+            - MODX_ADMIN_USER=${MODX_ADMIN_USER}
+            - MODX_ADMIN_PASSWORD=${MODX_ADMIN_PASSWORD}
+            - MODX_ADMIN_EMAIL=${MODX_ADMIN_EMAIL}
+            - MODX_LANG=${MODX_LANG}
+    db:
+        image: mysql:5.7
+        ports:
+            - 3306:3306
+        command: mysqld --sql-mode=NO_ENGINE_SUBSTITUTION
+        environment:
+            # with mysql
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        volumes:
+            - './data/mysql:/var/lib/mysql'
+        networks:
+            - modx
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        links:
+            - db
+        environment:
+            - PMA_ARBITRARY=1
+        restart: always
+        ports:
+            - 8080:80
+        volumes:
+            - /sessions
+        networks:
+            - modx
+networks:
+    modx:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: 11.100.1.0/24

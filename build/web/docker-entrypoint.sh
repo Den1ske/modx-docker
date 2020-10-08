@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-
 if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 	if [ -n "$MYSQL_PORT_3306_TCP" ]; then
 		if [ -z "$MODX_DB_HOST" ]; then
@@ -36,6 +35,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 	fi
 
 	TERM=dumb php -- "$MODX_DB_HOST" "$MODX_DB_USER" "$MODX_DB_PASSWORD" "$MODX_DB_NAME" <<'EOPHP'
+
 <?php
 $stderr = fopen('php://stderr', 'w');
 list($host, $port) = explode(':', $argv[1], 2);
@@ -72,9 +72,6 @@ EOPHP
 
     echo >&2 "Complete! MODX has been successfully copied to $(pwd)"
 
-		: ${MODX_ADMIN_USER:='admin'}
-		: ${MODX_ADMIN_PASSWORD:='admin'}
-
 		cat > setup/config.xml <<EOF
 <modx>
 	<database_type>mysql</database_type>
@@ -91,10 +88,10 @@ EOPHP
 	<cache_disabled>0</cache_disabled>
 	<inplace>1</inplace>
 	<unpacked>0</unpacked>
-	<language>en</language>
-	<cmsadmin>$WEB_ENV_MODX_ADMIN_USER</cmsadmin>
-	<cmspassword>$WEB_ENV_MODX_ADMIN_PASSWORD</cmspassword>
-	<cmsadminemail>$WEB_ENV_MODX_ADMIN_EMAIL</cmsadminemail>
+	<language>$MODX_LANG</language>
+	<cmsadmin>$MODX_ADMIN_USER</cmsadmin>
+	<cmspassword>$MODX_ADMIN_PASSWORD</cmspassword>
+	<cmsadminemail>$MODX_ADMIN_EMAIL</cmsadminemail>
 	<core_path>/var/www/html/core/</core_path>
 	<context_mgr_path>/var/www/html/manager/</context_mgr_path>
 	<context_mgr_url>/manager/</context_mgr_url>
