@@ -4,9 +4,14 @@ services:
     web:
         build: 
             context: ./build/web
-            args: 
-                - MODX_VERSION=${MODX_VERSION}
-                - MODX_SHA1=${MODX_SHA1}
+            args:
+                MODX_VERSION: ${MODX_VERSION}
+                MODX_SHA1: ${MODX_SHA1}
+                SMTP_HOST: ${SMTP_HOST}
+                SMTP_PORT: ${SMTP_PORT}
+                SMTP_USER: ${SMTP_USER}
+                SMTP_FROM: ${SMTP_FROM}
+                SMTP_PASSWORD: ${SMTP_PASSWORD}
         ports:
             - 80:80
         volumes:
@@ -16,14 +21,14 @@ services:
         networks:
             - modx
         environment:
-            - MODX_DB_PASSWORD=${MYSQL_PASSWORD}
-            - MODX_DB_USER=${MYSQL_USER}
-            - MODX_DB_NAME=${MYSQL_DATABASE}
-            - MODX_DB_HOST=db:3306
-            - MODX_ADMIN_USER=${MODX_ADMIN_USER}
-            - MODX_ADMIN_PASSWORD=${MODX_ADMIN_PASSWORD}
-            - MODX_ADMIN_EMAIL=${MODX_ADMIN_EMAIL}
-            - MODX_LANG=${MODX_LANG}
+            MODX_DB_PASSWORD: ${MYSQL_PASSWORD}
+            MODX_DB_USER: ${MYSQL_USER}
+            MODX_DB_NAME: ${MYSQL_DATABASE}
+            MODX_DB_HOST: 'db:3306'
+            MODX_ADMIN_USER: ${MODX_ADMIN_USER}
+            MODX_ADMIN_PASSWORD: ${MODX_ADMIN_PASSWORD}
+            MODX_ADMIN_EMAIL: ${MODX_ADMIN_EMAIL}
+            MODX_LANG: ${MODX_LANG}
     db:
         image: mysql:5.7
         ports:
@@ -31,10 +36,10 @@ services:
         command: mysqld --sql-mode=NO_ENGINE_SUBSTITUTION
         environment:
             # with mysql
-            - MYSQL_ROOT_PASSWORD=root
-            - MYSQL_DATABASE=${MYSQL_DATABASE}
-            - MYSQL_USER=${MYSQL_USER}
-            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            MYSQL_ROOT_PASSWORD: 'root'
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
         volumes:
             - './data/mysql:/var/lib/mysql'
         networks:

@@ -2,15 +2,46 @@ FROM php:7.4-apache
 
 RUN a2enmod rewrite
 
-
-RUN apt-get update && apt-get install -y libpng-dev libjpeg-dev unzip sudo && rm -rf /var/lib/apt/lists/* \
-	&& docker-php-ext-configure gd \
-	&& docker-php-ext-install gd opcache mysqli pdo pdo_mysql
-    
-ADD ./php.ini /etc/php/7.4/conf.d/90-php.ini
-
 ARG MODX_SHA1
 ARG MODX_VERSION
+ARG SMTP_HOST
+ARG SMTP_PORT
+ARG SMTP_USER
+ARG SMTP_FROM
+ARG SMTP_PASSWORD
+
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    libxpm-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libwebp-dev \
+    libzip-dev \
+    zip \
+    msmtp \
+    unzip \
+    sudo && rm -rf /var/lib/apt/lists/*
+RUN docker-php-ext-configure gd --with-webp --with-jpeg --with-xpm --with-freetype
+RUN docker-php-ext-install gd
+RUN docker-php-ext-install opcache mysqli pdo pdo_mysql
+
+COPY ./php.ini $PHP_INI_DIR/php.ini
+COPY ./.msmtprc /etc/msmtprc
+
+RUN sed -i 's/{USER}/'${SMTP_USER}'/' /etc/msmtprc
+RUN sed -i 's/{PASSWORD}/'${SMTP_PASSWORD}'/' /etc/msmtprc
+RUN sed -i 's/{HOST}/'${SMTP_HOST}'/' /etc/msmtprc
+RUN sed -i 's/{PORT}/'${SMTP_PORT}'/' /etc/msmtprc
+RUN sed -i 's/{FROM}/'${SMTP_FROM}'/' /etc/msmtprc
+
+RUN touch /var/log/php-mail.log
+RUN touch /var/log/msmtp.log
+
+RUN chown www-data:www-data /var/log/msmtp.log \
+    && chown www-data:www-data /var/log/php-mail.log \
+    && chown www-data:www-data /etc/msmtprc
+
 
 
 VOLUME /var/www/html
